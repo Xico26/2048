@@ -11,8 +11,12 @@ void main() {
     String[] validMoves = {"w", "a", "s", "d"};
 
     while (running) {
-        System.out.print("Enter your move (w/a/s/d): ");
+        System.out.print("Enter your move (w/a/s/d/quit): ");
         input = scanner.nextLine();
+
+        if (Objects.equals(input, "quit")) {
+            return;
+        }
 
         if (!Arrays.asList(validMoves).contains(input)) {
             System.out.println("Invalid input, try again!");
