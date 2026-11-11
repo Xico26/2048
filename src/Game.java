@@ -116,37 +116,41 @@ public class Game {
         }
     }
 
-    // Swipe up in a column, returns true if anything changed
-    private boolean processColumnUp(int col) {
+    private boolean processColumn(int col, int step) {
         boolean[] merged = {false, false, false, false};
         boolean changed = false;
 
-        for (int r = 1; r < 4; r++) {
-            if (board[r][col] == 0) {
-                continue;
-            }
+        // up (-1): 1 -> 4
+        // down (1): 2 -> 0
+        int firstElement = (step == 1) ? 2 : 1;
+
+        // r -= step -> r++ for up, r-- for down
+        for (int r = firstElement; r >= 0 && r < 4; r -= step) {
+            if (board[r][col] == 0) continue;
 
             int y = r;
 
-            while (y != 0) {
-                int tileUp = board[y-1][col];
-                if (tileUp != 0) {
-                    // above has same tile and hasnt merged before -> merge
-                    if (tileUp == board[y][col] && !merged[y-1]) {
+            while (y + step >= 0 && y + step < 4) {
+                // up: y - 1; down: y + 1
+                int nextIndex = y + step;
+                int nextTile = board[nextIndex][col];
+
+                if (nextTile != 0) {
+                    // next tile is the same and hasnt merged before -> merge
+                    if (nextTile == board[y][col] && !merged[nextIndex]) {
                         board[y][col] = 0;
-                        board[y-1][col] = tileUp * 2;
-                        merged[y-1] = true;
+                        board[nextIndex][col] = nextTile * 2;
+                        merged[nextIndex] = true;
                         changed = true;
                         break;
-                    } else {
-                        // cant merge, stop
-                        break;
                     }
+                    // either merged or blocked, can't do anything
+                    break;
                 } else {
-                    // tile above is empty -> move up
-                    board[y-1][col] = board[y][col];
+                    // next tile is empty -> move there
+                    board[nextIndex][col] = board[y][col];
                     board[y][col] = 0;
-                    y = y-1;
+                    y = nextIndex;
                     changed = true;
                 }
             }
@@ -155,115 +159,41 @@ public class Game {
         return changed;
     }
 
-    // Swipe down in a column, returns true if anything changed
-    private boolean processColumnDown(int col) {
+    private boolean processRow(int row, int step) {
         boolean[] merged = {false, false, false, false};
         boolean changed = false;
 
-        for (int r = 2; r >= 0; r--) {
-            if (board[r][col] == 0) {
-                continue;
-            }
+        // left (-1): 1 -> 4
+        // right (1): 2 -> 0
+        int firstElement = (step == 1) ? 2 : 1;
 
-            int y = r;
-
-            while (y != 3) {
-                int tileDown = board[y+1][col];
-                if (tileDown != 0) {
-                    // below has same tile and hasnt merged before -> merge
-                    if (tileDown == board[y][col] && !merged[y+1]) {
-                        board[y][col] = 0;
-                        board[y+1][col] = tileDown * 2;
-                        merged[y+1] = true;
-                        changed = true;
-                        break;
-                    } else {
-                        // cant merge, stop
-                        break;
-                    }
-                } else {
-                    // tile above is empty -> move up
-                    board[y+1][col] = board[y][col];
-                    board[y][col] = 0;
-                    y = y+1;
-                    changed = true;
-                }
-            }
-        }
-
-        return changed;
-    }
-
-    // Swipe right in a column, returns true if anything changed
-    private boolean processColumnRight(int row) {
-        boolean[] merged = {false, false, false, false};
-        boolean changed = false;
-
-        for (int c = 2; c >= 0; c--) {
-            if (board[row][c] == 0) {
-                continue;
-            }
+        // c -= step -> c++ for left, c-- for right
+        for (int c = firstElement; c >= 0 && c < 4; c -= step) {
+            if (board[row][c] == 0) continue;
 
             int x = c;
 
-            while (x != 3) {
-                int tileRight = board[row][x+1];
-                if (tileRight != 0) {
-                    // right has same tile and hasnt merged before -> merge
-                    if (tileRight == board[row][x] && !merged[x+1]) {
+            while (x + step >= 0 && x + step < 4) {
+                // left: x - 1; right: x + 1
+                int nextIndex = x + step;
+                int nextTile = board[row][nextIndex];
+
+                if (nextTile != 0) {
+                    // next tile is the same and hasnt merged before -> merge
+                    if (nextTile == board[row][x] && !merged[nextIndex]) {
                         board[row][x] = 0;
-                        board[row][x+1] = tileRight * 2;
-                        merged[x+1] = true;
+                        board[row][nextIndex] = nextTile * 2;
+                        merged[nextIndex] = true;
                         changed = true;
                         break;
-                    } else {
-                        // cant merge, stop
-                        break;
                     }
+                    // either merged or blocked, can't do anything
+                    break;
                 } else {
-                    // tile above is empty -> move up
-                    board[row][x+1] = board[row][x];
+                    // next tile is empty -> move there
+                    board[row][nextIndex] = board[row][x];
                     board[row][x] = 0;
-                    x = x+1;
-                    changed = true;
-                }
-            }
-        }
-
-        return changed;
-    }
-
-    // Swipe left in a column, returns true if anything changed
-    private boolean processColumnLeft(int row) {
-        boolean[] merged = {false, false, false, false};
-        boolean changed = false;
-
-        for (int c = 1; c < 4; c++) {
-            if (board[row][c] == 0) {
-                continue;
-            }
-
-            int x = c;
-
-            while (x != 0) {
-                int tileLeft = board[row][x-1];
-                if (tileLeft != 0) {
-                    // right has same tile and hasnt merged before -> merge
-                    if (tileLeft == board[row][x] && !merged[x-1]) {
-                        board[row][x] = 0;
-                        board[row][x-1] = tileLeft * 2;
-                        merged[x-1] = true;
-                        changed = true;
-                        break;
-                    } else {
-                        // cant merge, stop
-                        break;
-                    }
-                } else {
-                    // tile above is empty -> move up
-                    board[row][x-1] = board[row][x];
-                    board[row][x] = 0;
-                    x = x-1;
+                    x = nextIndex;
                     changed = true;
                 }
             }
@@ -280,19 +210,19 @@ public class Game {
             boolean res;
             switch (direction) {
                 case "w":
-                    res = processColumnUp(i);
+                    res = processColumn(i, -1);
                     changed = res || changed;
                     break;
                 case "s":
-                    res = processColumnDown(i);
+                    res = processColumn(i, 1);
                     changed = res || changed;
                     break;
                 case "d":
-                    res = processColumnRight(i);
+                    res = processRow(i, 1);
                     changed = res || changed;
                     break;
                 case "a":
-                    res = processColumnLeft(i);
+                    res = processRow(i, -1);
                     changed = res || changed;
                     break;
                 default:
